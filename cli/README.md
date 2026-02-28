@@ -1,13 +1,12 @@
 # Monochrome CLI
 
-**Self-contained** command-line app for searching artists and downloading albums (same API as the Monochrome web app). The **`cli/` folder is standalone**: copy only this folder to your Unraid server or anywhere else; no need for the rest of the monochrome repo.
+Command-line app for searching artists and downloading albums (same API as the Monochrome web app). The **`cli/` folder is standalone**: no need for the rest of the monochrome repo.
 
 **Folder structure** (everything you need is inside `cli/`):
 
 - `index.js` – entry point
 - `download-node.js`, `download-settings.js`, `settings-node.js` – download and API config
 - `lib/` – API client, cache, playlist generators, and stubs (no dependency on parent app)
-- `Dockerfile`, `docker-compose.yml`, `docker-entrypoint.sh`, `run-and-sync.sh` – Docker and Unraid
 - `package.json` – optional (`npm run start` when run from inside `cli/`)
 
 ## Flow
@@ -30,7 +29,7 @@ npm run cli
 node cli/index.js "Artist Name"
 ```
 
-**From inside the `cli/` folder** (e.g. after copying only cli/ to your server):
+**From inside the `cli/` folder:**
 
 ```bash
 node index.js
@@ -50,10 +49,8 @@ When asked **Download:** you can enter:
 | Variable | Description |
 |----------|-------------|
 | `MONOCHROME_API_URL` | Single API base URL (e.g. `https://api.monochrome.tf`). If set, this is used for both API and streaming. |
-| `MONOCHROME_DOWNLOAD_DIR` | Directory for downloads (default: `./downloads`). In Docker, the entrypoint sets this to the staging dir. |
+| `MONOCHROME_DOWNLOAD_DIR` | Directory for downloads (default: `./downloads`). |
 | `MONOCHROME_QUALITY` | Stream quality: `LOSSLESS`, `HI_RES_LOSSLESS`, `HIGH`, `LOW` (default: `LOSSLESS`). |
-| `MONOCHROME_STAGING_DIR` | (Docker) Where to download inside the container before copying (default: `/staging`). |
-| `MONOCHROME_OUTPUT_DIR` | (Docker) Final directory to copy into after a successful run (default: `/output`; mount your volume here). |
 | `MONOCHROME_DELAY_MS` | Delay in ms **between albums** (default: 0). Use e.g. `2000` to throttle and reduce rate limits. |
 | `MONOCHROME_TRACK_DELAY_MS` | Delay in ms **between tracks** within an album (default: 0). Use e.g. `500` if you still hit limits. |
 
@@ -71,62 +68,6 @@ When asked **Download:** you can enter:
 | `MONOCHROME_RELATIVE_PATHS` | Use relative paths in playlists | `true` |
 | `MONOCHROME_DOWNLOAD_LYRICS` | Include .lrc lyrics (CLI: not implemented yet) | `true` |
 | `MONOCHROME_ROMAJI_LYRICS` | Romaji for Japanese lyrics (CLI: not implemented yet) | `true` |
-
-## Docker (self-contained: build from `cli/` only)
-
-The CLI runs in a container. Downloads go to `/staging`; on success they’re copied to your mounted `/output` folder.
-
-**Build** (from inside the `cli/` folder):
-
-```bash
-cd cli
-docker build -t monochrome-cli .
-```
-
-**Run once** (interactive, then sync and exit):
-
-```bash
-docker run -it --rm \
-  -v /path/on/host/to/music:/output \
-  monochrome-cli "Slipknot"
-```
-
-### Unraid / Docker Compose (run from container console)
-
-1. **Copy only the `cli/` folder** to your Unraid server (e.g. `/mnt/user/appdata/monochrome-cli`). No need for the rest of the monochrome repo.
-
-2. **Set your music path** in `cli/docker-compose.yml`: edit the volume (default `./music:/output`). On Unraid use e.g. `/mnt/user/music:/output`.
-
-3. **Build and start** (from inside the copied `cli/` folder):
-   ```bash
-   cd /mnt/user/appdata/monochrome-cli
-   docker compose up -d --build
-   ```
-
-4. **Open a shell in the container**:
-   ```bash
-   docker compose exec cli sh
-   ```
-
-5. **Run the CLI** (prompts for artist and download selection):
-   ```bash
-   node index.js "Artist Name"
-   ```
-   Downloads go to `/staging`.
-
-6. **Copy to your music folder** when done:
-   ```bash
-   ./run-and-sync.sh
-   ```
-   Or do both in one go:
-   ```bash
-   ./run-and-sync.sh "Metallica"
-   ```
-
-7. **Run once and exit** (no console):
-   ```bash
-   docker compose run --rm cli "Metallica"
-   ```
 
 ## Requirements
 
