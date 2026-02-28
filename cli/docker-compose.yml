@@ -1,0 +1,31 @@
+# Monochrome CLI – self-contained. Run from this (cli/) folder:
+#   cd cli && docker compose up -d --build
+#
+# 1) Console mode (run CLI from inside the container):
+#    docker compose up -d
+#    docker compose exec cli sh
+#    Then inside:  node index.js "Artist Name"
+#    When done:    ./run-and-sync.sh   (copies /staging to /output)
+#    Or in one go: ./run-and-sync.sh "Metallica"
+#
+# 2) Run once (artist as argument, then exit and sync):
+#    docker compose run --rm cli "Metallica"
+#
+# Set the host path for your music in the volume below (e.g. /mnt/user/music).
+
+services:
+  cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: monochrome-cli
+    container_name: monochrome-cli
+    entrypoint: []
+    command: ["sh", "-c", "sleep infinity"]
+    environment:
+      - MONOCHROME_DOWNLOAD_DIR=/staging
+      - MONOCHROME_OUTPUT_DIR=/output
+    volumes:
+      - ./music:/output
+    stdin_open: true
+    tty: true
